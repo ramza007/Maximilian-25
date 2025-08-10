@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="detail">
+  <div class="detail-layout">
+    <img class="detail-poster" loading="lazy"
+         src="{{ e.poster_url or url_for('static', filename='icons/placeholder.png') }}"
+         alt="Poster for {{ e.title }}">
+    <div class="detail-meta">
+      <h1>Edit: {{ e.title }}</h1>
+      <form method="post">
+        <label>Title</label>
+        <input type="text" name="title" value="{{ e.title }}">
+
+        <label>Date watched</label>
+        <input type="date" name="date_watched"
+               value="{{ e.date_watched.isoformat() if e.date_watched }}">
+
+        <label>Rating (1–10)</label>
+        <input type="number" name="rating" min="1" max="10"
+               value="{{ e.rating if e.rating is not none }}">
+
+        <label>Review</label>
+        <textarea name="review" rows="5">{{ e.review or '' }}</textarea>
+
+        <div style="display:flex; gap:8px; margin-top:10px;">
+          <button type="submit">Save</button>
+          <a class="button" href="{{ url_for('diary') }}">Cancel</a>
+        </div>
+      </form>
+
+      <p class="muted small" style="margin-top:8px;">
+        Need metadata? <a href="{{ url_for('item_detail', kind=e.kind, item_id=e.external_id|int if e.external_id.isdigit() else 0) }}">View details</a>
+        (if external id is TMDb numeric).
+      </p>
+    </div>
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="detail">
+  {% if error %}
+    <p class="error">Error: {{ error }}</p>
+  {% elif item %}
+    <div class="detail-layout">
+      <img class="detail-poster" loading="lazy" src="{{ item.poster or url_for('static', filename='icons/placeholder.png') }}" alt="Poster for {{ item.title }}">
+      <div class="detail-meta">
+        <h1>{{ item.title }}{% if item.year %} <span class="muted">({{ item.year }})</span>{% endif %}</h1>
+        <p class="muted">{{ item.kind|capitalize }}{% if item.runtime %} · {{ item.runtime }} min{% endif %}</p>
+        {% if item.genres %}<p>Genres: {{ item.genres | join(', ') }}</p>{% endif %}
+        {% if item.studios %}<p>Studios: {{ item.studios | join(', ') }}</p>{% endif %}
+        {% if item.overview %}<p>{{ item.overview }}</p>{% endif %}
+        <form id="add-to-diary">
+          <input type="hidden" name="external_id" value="{{ item.id }}">
+          <input type="hidden" name="kind" value="{{ item.kind }}">
+          <input type="hidden" name="title" value="{{ item.title }}">
+          <input type="hidden" name="poster_url" value="{{ item.poster }}">
+          <label>Date watched</label>
+          <input type="date" name="date_watched">
+          <label>Rating (1–10)</label>
+          <input type="number" name="rating" min="1" max="10" inputmode="numeric">
+          <label>Review</label>
+          <textarea name="review" rows="4" placeholder="Quick thoughts…"></textarea>
+          <button type="submit">Add to diary</button>
+          <p class="muted small" id="add-result" role="status"></p>
+        </form>
+      </div>
+    </div>
+  {% endif %}
+</section>
+{% endblock %}

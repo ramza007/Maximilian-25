@@ -1,0 +1,53 @@
+# --- Python / Flask ---
+__pycache__/
+*.py[cod]
+*.so
+*.pyd
+*.pyo
+
+# Virtual envs
+.venv/
+venv/
+.virtual/
+
+# Py tooling caches
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+.cache/
+__pypackages__/
+
+# Flask instance & local data
+instance/
+*.db
+*.db-journal
+*.sqlite3
+maximilian.db
+
+# Env files (keep the example)
+.env
+.env.*
+!.env.example
+
+# Logs & coverage
+*.log
+logs/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+
+# OS / IDE noise
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.code-workspace
+
+# Node (just in case you add tooling)
+node_modules/
+dist/
+build/
+
+# Archives / misc
+*.zip

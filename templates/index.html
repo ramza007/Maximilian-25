@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="hero">
+  <h1>Track what you watch.</h1>
+  <p>Add films and shows to your diary, fast.</p>
+</section>
+
+<section>
+  <h2>Latest diary entries</h2>
+  <div class="cards">
+    {% for e in latest %}
+      <article class="card">
+        <img loading="lazy" src="{{ e.poster_url or url_for('static', filename='icons/placeholder.png') }}" alt="Poster for {{ e.title }}">
+        <div class="card-body">
+          <h3>{{ e.title }}</h3>
+          <p class="muted">{{ e.kind|capitalize }}{% if e.date_watched %} · {{ e.date_watched.strftime('%b %d, %Y') }}{% endif %}
+            {% if e.rating %} · ★ {{ e.rating }}/10{% endif %}
+          </p>
+          {% if e.review %}<p>{{ e.review[:140] }}{% if e.review|length > 140 %}…{% endif %}</p>{% endif %}
+        </div>
+      </article>
+    {% else %}
+      <p class="muted">No entries yet. Try a search above.</p>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

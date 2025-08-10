@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block content %}
+<section>
+  <h2>Search{% if q %}: “{{ q }}”{% endif %}</h2>
+  {% if error %}<p class="error">Error: {{ error }}</p>{% endif %}
+  <div class="cards">
+  {% for r in results %}
+    <article class="card">
+      <a href="{{ url_for('item_detail', kind=r.kind, item_id=r.id) }}">
+        <img loading="lazy" src="{{ r.poster or url_for('static', filename='icons/placeholder.png') }}" alt="Poster for {{ r.title }}">
+      </a>
+      <div class="card-body">
+        <h3><a href="{{ url_for('item_detail', kind=r.kind, item_id=r.id) }}">{{ r.title }}</a> {% if r.year %}<span class="muted">({{ r.year }})</span>{% endif %}</h3>
+        <p class="muted">{{ r.kind|capitalize }}</p>
+        {% if r.overview %}<p>{{ r.overview[:160] }}{% if r.overview|length > 160 %}…{% endif %}</p>{% endif %}
+      </div>
+    </article>
+  {% else %}
+    {% if q %}<p class="muted">No results</p>{% endif %}
+  {% endfor %}
+  </div>
+</section>
+{% endblock %}

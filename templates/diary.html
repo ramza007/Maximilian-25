@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block content %}
+<section>
+  <h2>Your Diary</h2>
+
+  {% if groups|length == 0 %}
+    <p class="muted">Empty diary. After you search, open a title and add it here.</p>
+  {% endif %}
+
+  {% for g in groups %}
+    <div class="date-group">
+      <h3 class="date-divider">{{ g.date.strftime('%b %d, %Y') if g.date else 'Undated' }}</h3>
+
+      <ul class="list">
+        {% for e in g["entries"] %} {# note: entries, not items #}
+          <li class="row">
+            <a class="thumb-wrap" href="{{ url_for('edit_entry', entry_id=e.id) }}">
+              <img class="thumb" loading="lazy"
+                   src="{{ e.poster_url or url_for('static', filename='icons/placeholder.png') }}"
+                   alt="Poster for {{ e.title }}">
+            </a>
+            <div class="info">
+              <h3><a href="{{ url_for('edit_entry', entry_id=e.id) }}">{{ e.title }}</a></h3>
+              <div class="meta">
+                {{ e.kind|capitalize }}{% if e.rating %} · ★ {{ e.rating }}/10{% endif %}
+              </div>
+              {% if e.review %}<div class="review">{{ e.review }}</div>{% endif %}
+            </div>
+            <div class="actions">
+              <a class="button" href="{{ url_for('edit_entry', entry_id=e.id) }}">Edit</a>
+              <button class="danger" data-remove="{{ e.id }}">Remove</button>
+            </div>
+          </li>
+        {% endfor %}
+      </ul>
+    </div>
+  {% endfor %}
+</section>
+{% endblock %}

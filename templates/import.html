@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block content %}
+<section>
+  <h2>Import Letterboxd CSV</h2>
+  <p class="muted small">Upload the CSV you export from Letterboxd. We'll map: <code>Date | Name | Year | Letterboxd URI | Rating | Rewatch | Tags | Watched Date</code>. Duplicates are okay.</p>
+  {% if error %}<p class="error">{{ error }}</p>{% endif %}
+  {% if added is defined %}
+    <p>Imported <strong>{{ added }}</strong> rows{% if errors %} ({{ errors }} errors skipped){% endif %}.</p>
+    <p><a href="{{ url_for('diary') }}">Go to your diary →</a></p>
+  {% endif %}
+  <form class="card" action="{{ url_for('import_letterboxd') }}" method="post" enctype="multipart/form-data" style="padding:12px;">
+    <label for="file">Letterboxd CSV file</label>
+    <input id="file" type="file" name="file" accept=".csv">
+    <button type="submit" style="margin-top:10px;">Import</button>
+  </form>
+</section>
+{% endblock %}
