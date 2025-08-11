@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block content %}
 <section>
-  <h2>Your Diary</h2>
+  <h2>Diary - <span class="muted">{{ display_name }}</span></h2>
 
   {% if groups|length == 0 %}
     <p class="muted">Empty diary. After you search, open a title and add it here.</p>

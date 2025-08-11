@@ -33,7 +33,23 @@
 @media (max-width:420px){ .actions .danger{display:none} }
 
 
+/* user dropdown */
+.user-menu{ position:relative; display:flex; align-items:center; }
+.user-btn{
+  /* background:var(--bg-elev); color:var(--text); border:1px solid #22303d; */
+  padding:8px 12px; border-radius:999px; font-weight:600; cursor:pointer;
+}
+.user-dropdown{
+  position:absolute; right:0; top:110%;
+  background:var(--bg-elev); border:1px solid #22303d; border-radius:12px;
+  box-shadow:var(--shadow); min-width:180px; padding:6px; z-index:2000;
+}
+.user-dropdown a{
+  display:block; padding:10px 12px; border-radius:10px; color:var(--text); text-decoration:none;
+}
+.user-dropdown a:hover{ background:#0f161d; }
 
+/* ---------------------------------------------------------------- VIEWPORTS ---------------------------------------------------------------- */
 *{box-sizing:border-box}
 html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font:16px/1.5 system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial, sans-serif;}
 

@@ -82,3 +82,39 @@ class TMDBClient:
             "rating": d.get("vote_average"),
             "airs": None
         }
+
+
+# add next to _poster_url
+def _profile_url(self, path, size="w185"):
+    return f"{IMG_BASE}/{size}{path}" if path else None
+
+def get_series(self, tv_id: int):
+    d = self._get(f"/tv/{tv_id}", append_to_response="credits")
+    # normalize like before
+    title = d.get("name") or d.get("title") or "Untitled"
+    poster = self._poster_url(d.get("poster_path"))
+    genres = [g["name"] for g in d.get("genres", []) if g.get("name")]
+    companies = [c["name"] for c in d.get("production_companies", []) if c.get("name")]
+    year = None
+    if d.get("first_air_date"):
+        year = d["first_air_date"].split("-", 1)[0]
+    # cast (limit to 20)
+    cast = []
+    for p in (d.get("credits", {}) or {}).get("cast", [])[:20]:
+        cast.append({
+            "id": p.get("id"),
+            "name": p.get("name"),
+            "character": p.get("character"),
+            "photo": self._profile_url(p.get("profile_path"))
+        })
+    return {
+        "id": d.get("id"),
+        "kind": "series",
+        "title": title,
+        "poster": poster,
+        "overview": d.get("overview"),
+        "year": year,
+        "genres": genres,
+        "studios": companies,
+        "cast": cast,
+    }

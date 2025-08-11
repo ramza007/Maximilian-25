@@ -3,6 +3,9 @@ from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 from itertools import groupby
 from flask import flash
+import re
+import unicodedata
+from difflib import SequenceMatcher
 import os
 
 from tmdb import TMDBClient
@@ -17,6 +20,12 @@ app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "dev-secret-change-me")
 
 db = SQLAlchemy(app)
 
+# Show a name in the header dropdown (set USER_NAME in .env)
+@app.context_processor
+def inject_display_name():
+    return {"display_name": os.environ.get("USER_NAME", "Turbo")}
+
+
 # --- Models ---
 class DiaryEntry(db.Model):
     __tablename__ = "diary_entries"
@@ -28,6 +37,7 @@ class DiaryEntry(db.Model):
     date_watched = db.Column(db.Date, nullable=True)
     rating = db.Column(db.Integer, nullable=True)           # 1..10 (or None)
     review = db.Column(db.Text, nullable=True)
+    release_year = db.Column(db.Integer)  # <-- add this
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
 
     def to_dict(self):
@@ -122,6 +132,31 @@ def api_diary_delete(entry_id):
     db.session.commit()
     return jsonify({"ok": True})
 
+
+@app.route("/entry/<int:entry_id>/poster", methods=["POST"])
+def set_poster(entry_id):
+    e = DiaryEntry.query.get_or_404(entry_id)
+    url = (request.form.get("poster_url") or "").strip()
+    if url:
+        e.poster_url = url
+        db.session.commit()
+    return redirect(url_for("edit_entry", entry_id=entry_id))
+
+
+@app.cli.command("migrate-add-release-year")
+def migrate_add_release_year():
+    from sqlalchemy import inspect, text
+    insp = inspect(db.engine)
+    cols = [c['name'] for c in insp.get_columns('diary_entries')]
+    if "release_year" not in cols:
+        db.session.execute(
+            text("ALTER TABLE diary_entries ADD COLUMN release_year INTEGER"))
+        db.session.commit()
+        print("Added release_year column.")
+    else:
+        print("release_year already exists.")
+
+
 # --- Letterboxd CSV Import ---
 import csv, io
 from datetime import datetime as _dt
@@ -145,45 +180,54 @@ def _map_lb_rating(s: str):
     except Exception:
         return None
 
+
 @app.route("/import", methods=["GET", "POST"])
 def import_letterboxd():
     if request.method == "GET":
         return render_template("import.html")
+
     f = request.files.get("file")
     if not f or not f.filename.lower().endswith(".csv"):
         return render_template("import.html", error="Upload a .csv file from Letterboxd export.")
+
     text = f.stream.read().decode("utf-8", "ignore")
     reader = csv.DictReader(io.StringIO(text))
-    added = 0
-    errors = 0
-    poster_cache = {}
+    added = errors = 0
+    poster_cache: dict[tuple[str, int | None], str | None] = {}
 
     for row in reader:
         try:
             title = (row.get("Name") or row.get("Title") or "").strip()
             if not title:
                 continue
-            year = (row.get("Year") or "").strip()
-            lb_uri = (row.get("Letterboxd URI") or row.get("Letterboxd URL") or row.get("Letterboxd Uri") or "").strip()
-            watched = _parse_lb_date(row.get("Watched Date") or row.get("Date") or "")
+
+            # <-- capture Letterboxd "Year" (release year)
+            release_year = None
+            y = (row.get("Year") or "").strip()
+            if y.isdigit():
+                release_year = int(y)
+
+            lb_uri = (row.get("Letterboxd URI") or row.get(
+                "Letterboxd URL") or row.get("Letterboxd Uri") or "").strip()
+            watched = _parse_lb_date(
+                row.get("Watched Date") or row.get("Date") or "")
             rating = _map_lb_rating(row.get("Rating"))
             tags = (row.get("Tags") or "").strip()
             rewatch = (row.get("Rewatch") or "").strip()
-            external_id = f"letterboxd:{lb_uri}" if lb_uri else f"letterboxd:{title}:{year}"
+            external_id = f"letterboxd:{lb_uri}" if lb_uri else f"letterboxd:{title}:{release_year or ''}"
 
-            key = f"{title}|{year}"
+            # poster (cache by title+release_year)
+            key = (title, release_year)
             poster = poster_cache.get(key)
             if poster is None:
-                try:
-                    sr = tmdb.search(f"{title} {year}".strip())
-                    poster = sr[0]["poster"] if sr else None
-                except Exception:
-                    poster = None
+                poster = tmdb_poster_for_movie(title, release_year)
                 poster_cache[key] = poster
 
             review_bits = []
-            if tags: review_bits.append(f"Tags: {tags}")
-            if rewatch.lower().startswith("y"): review_bits.append("Rewatch")
+            if tags:
+                review_bits.append(f"Tags: {tags}")
+            if rewatch.lower().startswith("y"):
+                review_bits.append("Rewatch")
             review = " • ".join(review_bits) if review_bits else None
 
             db.session.add(DiaryEntry(
@@ -193,7 +237,8 @@ def import_letterboxd():
                 poster_url=poster,
                 date_watched=watched,
                 rating=rating,
-                review=review
+                review=review,
+                release_year=release_year,   # <-- save it
             ))
             added += 1
         except Exception:
@@ -278,22 +323,135 @@ def api_diary_update(entry_id):
     return jsonify({"ok": True, "entry": e.to_dict()})
 
 
+def _norm_title(s: str) -> str:
+    if not s:
+        return ""
+    s = unicodedata.normalize("NFKD", s)
+    s = "".join(c for c in s if not unicodedata.category(c).startswith("M"))
+    s = s.lower()
+    s = re.sub(r"\(.*?\)", "", s)              # drop parentheticals
+    s = s.replace("&", "and")
+    s = re.sub(r"[^a-z0-9 ]+", " ", s)         # strip punctuation
+    s = re.sub(r"\s+", " ", s).strip()
+    return s
+
+
+def _score(title_q: str, title_hit: str, year_q: int | None, year_hit: int | None) -> float:
+    """Title similarity + small year bonus (exact=+0.2, off by 1=+0.05)."""
+    t = SequenceMatcher(None, _norm_title(title_q),
+                        _norm_title(title_hit)).ratio()
+    bonus = 0.0
+    if year_q and year_hit:
+        if year_q == year_hit:
+            bonus = 0.20
+        elif abs(year_q - year_hit) == 1:
+            bonus = 0.05
+    return t + bonus
+
+
 @app.cli.command("backfill-posters")
 def backfill_posters():
     filled = 0
+    misses = []
+
     for e in DiaryEntry.query.filter((DiaryEntry.poster_url == None) | (DiaryEntry.poster_url == "")).all():
+        # 1) get year hint
         year = e.date_watched.year if e.date_watched else None
-        if (not year) and e.external_id.startswith("letterboxd:"):
-            parts = e.external_id.split(":")
-            if parts and parts[-1].isdigit():
-                year = int(parts[-1])
-        q = f"{e.title} {year}" if year else e.title
+        if not year and e.external_id and e.external_id.startswith("letterboxd:"):
+            # we sometimes stored title:year in external_id when no URI
+            tail = e.external_id.split(":")[-1]
+            if tail.isdigit():
+                year = int(tail)
+
+        # 2) query the right TMDb endpoint with year
+        results = []
         try:
-            r = tmdb.search(q)
-            if r and r[0].get("poster"):
-                e.poster_url = r[0]["poster"]
-                filled += 1
+            if e.kind == "movie":
+                # /search/movie supports year and primary_release_year
+                j = tmdb._get("/search/movie", query=e.title, include_adult=False,
+                              year=year, primary_release_year=year or None)
+                for it in j.get("results", []):
+                    title = it.get("title") or it.get("name")
+                    release = (it.get("release_date") or "")[:4]
+                    results.append({
+                        "id": it.get("id"),
+                        "title": title,
+                        "year": int(release) if release.isdigit() else None,
+                        "poster": tmdb._poster_url(it.get("poster_path"))
+                    })
+            else:  # series
+                j = tmdb._get("/search/tv", query=e.title, include_adult=False,
+                              first_air_date_year=year or None)
+                for it in j.get("results", []):
+                    title = it.get("name") or it.get("title")
+                    first = (it.get("first_air_date") or "")[:4]
+                    results.append({
+                        "id": it.get("id"),
+                        "title": title,
+                        "year": int(first) if first.isdigit() else None,
+                        "poster": tmdb._poster_url(it.get("poster_path"))
+                    })
         except Exception:
-            pass
+            results = []
+
+        # 3) pick best match (exact > fuzzy > popularity already implied)
+        best = None
+        best_score = 0.0
+        for r in results:
+            score = _score(e.title, r["title"], year, r["year"])
+            if _norm_title(r["title"]) == _norm_title(e.title) and (not year or r["year"] == year):
+                score += 0.5  # strong boost for exact title (+ year) match
+            if score > best_score:
+                best, best_score = r, score
+
+        if best and best.get("poster"):
+            e.poster_url = best["poster"]
+            # Optional: lock in a stable external id when we found a good hit
+            # e.external_id = f"tmdb:{best['id']}"
+            filled += 1
+        else:
+            misses.append(f"{e.title} ({year or 'n/a'})")
+
     db.session.commit()
     print(f"Backfilled posters for {filled} entries.")
+    if misses:
+        print("No poster found for:")
+        for m in misses[:50]:
+            print(" -", m)
+        if len(misses) > 50:
+            print(f" ... and {len(misses)-50} more")
+
+
+def tmdb_poster_for_movie(title: str, year: int | None):
+    # Try with year, then without (handles “watched in 2024, released in 2018”)
+    def _search(y):
+        try:
+            js = tmdb._get("/search/movie", query=title, include_adult=False,
+                           year=y or None, primary_release_year=y or None)
+            res = js.get("results", [])
+        except Exception:
+            res = []
+        return res
+
+    def _choose(res):
+        if not res:
+            return None
+        # prefer exact title (case/diacritics-insensitive), else first with poster
+        import unicodedata
+        import re
+
+        def norm(s):
+            s = unicodedata.normalize("NFKD", s)
+            s = "".join(c for c in s if not unicodedata.category(
+                c).startswith("M"))
+            s = re.sub(r"\(.*?\)", "", s).lower().strip()
+            return s
+        ntitle = norm(title)
+        exact = next((r for r in res if norm(r.get("title") or r.get(
+            "name", "")) == ntitle and r.get("poster_path")), None)
+        pick = exact or next((r for r in res if r.get("poster_path")), None)
+        if not pick:
+            return None
+        return f"https://image.tmdb.org/t/p/w500{pick['poster_path']}"
+
+    return _choose(_search(year)) or _choose(_search(None))

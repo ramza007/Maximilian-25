@@ -36,3 +36,20 @@ if(addForm){
     });
   });
 }
+
+// user dropdown
+const userBtn = document.getElementById("userMenuBtn");
+const userMenu = document.getElementById("userMenu");
+if (userBtn && userMenu) {
+  userBtn.addEventListener("click", () => {
+    const isHidden = userMenu.hasAttribute("hidden");
+    userMenu.toggleAttribute("hidden", !isHidden ? true : false);
+    userBtn.setAttribute("aria-expanded", isHidden ? "true" : "false");
+  });
+  document.addEventListener("click", (e) => {
+    if (!e.target.closest(".user-menu")) {
+      userMenu.setAttribute("hidden", "");
+      userBtn.setAttribute("aria-expanded", "false");
+    }
+  });
+}

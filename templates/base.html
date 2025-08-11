@@ -17,7 +17,17 @@
     <a href="{{ url_for('index') }}" class="nav-logo">MAXIMILIAN</a>
     <div class="nav-placeholder" aria-hidden="true"></div>
     <a class="nav-link" href="{{ url_for('diary') }}">Diary</a>
-    <a class="nav-link" href="{{ url_for('import_letterboxd') }}">Import</a>
+
+    <div class="user-menu">
+      <button id="userMenuBtn" class="user-btn" aria-haspopup="true" aria-expanded="false">
+        {{ display_name }}
+      </button>
+      <div id="userMenu" class="user-dropdown" hidden>
+        <!-- <a href="{{ url_for('diary') }}">Diary</a> -->
+        <a href="{{ url_for('import_letterboxd') }}">Import CSV</a>
+        <!-- add more later: Settings, Export, Sign out, etc. -->
+      </div>
+
   </nav>
 </header>
 
