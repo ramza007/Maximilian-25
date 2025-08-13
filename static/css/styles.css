@@ -49,6 +49,51 @@
 }
 .user-dropdown a:hover{ background:#0f161d; }
 
+/* series layout */
+.series-layout{display:grid;grid-template-columns:2fr 1fr;gap:12px;margin-bottom:12px}
+@media (max-width:640px){.series-layout{grid-template-columns:1.5fr 1fr}}
+.series-poster{width:100%;border-radius:16px;box-shadow:var(--shadow);background:#0b1016}
+.poster-wrap{align-self:start}
+
+.cast-rail{background:var(--bg-elev);border:1px solid #22303d;border-radius:16px;padding:10px;height:100%}
+.cast-rail h4{margin:0 0 8px}
+.cast-rail ul{list-style:none;margin:0;padding:0;max-height:calc(100% - 28px);overflow-y:auto}
+.cast-rail li{display:flex;gap:10px;align-items:center;padding:8px;border-radius:10px}
+.cast-rail li img{width:44px;height:44px;object-fit:cover;border-radius:10px;background:#0b1016}
+.cast-rail .name{font-weight:600;font-size:14px}
+.cast-rail .role{font-size:12px;color:var(--muted)}
+
+.block{margin-bottom:12px;padding:12px}
+.card.block{background:var(--bg-elev);border-radius:16px;box-shadow:var(--shadow)}
+
+/* star rating */
+.stars{display:flex;gap:4px;margin:6px 0 10px}
+.star{background:#0f161d;border:1px solid #22303d;border-radius:8px;padding:6px;line-height:1;
+      font-size:16px;color:#456;cursor:pointer}
+.star.active{background:var(--accent);color:#002a24;border-color:var(--accent)}
+
+/* visibility helpers */
+.desktop-only { display: none; }
+.mobile-only  { display: block; }
+
+@media (min-width: 900px) {
+  .desktop-only { display: flex; }
+  .mobile-only  { display: none; }   /* hide fixed footer on desktop */
+  .container    { padding-bottom: 24px; } /* since footer is hidden */
+  .nav-search input{
+    appearance:none;
+    border:1px solid #22303d;
+    background:var(--bg-elev);
+    color:var(--text);
+    padding:12px 14px;
+    border-radius:999px;
+    width:min(46vw, 560px);
+    box-shadow:var(--shadow);
+    font-size:16px;
+  }
+}
+
+
 /* ---------------------------------------------------------------- VIEWPORTS ---------------------------------------------------------------- */
 *{box-sizing:border-box}
 html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font:16px/1.5 system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial, sans-serif;}
@@ -95,3 +140,7 @@ button:disabled{opacity:.6;cursor:not-allowed}
 .bottom-search input::placeholder{color:var(--muted)}
 
 a{color:var(--text);} a:hover{opacity:.9}
+
+@media (min-width: 1000px){
+  .detail-layout{ grid-template-columns: 280px 1fr 260px; }
+}

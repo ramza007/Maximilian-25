@@ -15,19 +15,23 @@
 <header class="site-header">
   <nav class="nav">
     <a href="{{ url_for('index') }}" class="nav-logo">MAXIMILIAN</a>
-    <div class="nav-placeholder" aria-hidden="true"></div>
+    <!-- <div class="nav-placeholder" aria-hidden="true"></div> -->
+
+    <!-- Desktop search (hidden on mobile) -->
+    <form class="nav-search desktop-only" action="{{ url_for('search') }}" method="get" role="search">
+      <input type="search" name="q" placeholder="Search movies &amp; series…"
+             value="{{ request.args.get('q','') }}" aria-label="Search"
+             autocapitalize="off" autocomplete="off" spellcheck="false">
+    </form>
+
     <a class="nav-link" href="{{ url_for('diary') }}">Diary</a>
-
     <div class="user-menu">
-      <button id="userMenuBtn" class="user-btn" aria-haspopup="true" aria-expanded="false">
-        {{ display_name }}
-      </button>
+      <button id="userMenuBtn" class="user-btn" aria-haspopup="true" aria-expanded="false">{{ display_name }}</button>
       <div id="userMenu" class="user-dropdown" hidden>
-        <!-- <a href="{{ url_for('diary') }}">Diary</a> -->
+        <a href="{{ url_for('diary') }}">Diary</a>
         <a href="{{ url_for('import_letterboxd') }}">Import CSV</a>
-        <!-- add more later: Settings, Export, Sign out, etc. -->
       </div>
-
+    </div>
   </nav>
 </header>
 
@@ -35,9 +39,12 @@
   {% block content %}{% endblock %}
 </main>
 
-<footer class="footer">
+<!-- Mobile search (hidden on desktop) -->
+<footer class="footer mobile-only">
   <form class="bottom-search" action="{{ url_for('search') }}" method="get" role="search">
-    <input type="search" name="q" placeholder="Search movies &amp; series…" value="{{ request.args.get('q','') }}" aria-label="Search">
+    <input type="search" name="q" placeholder="Search movies &amp; series…"
+           value="{{ request.args.get('q','') }}" aria-label="Search"
+           autocapitalize="off" autocomplete="off" spellcheck="false">
   </form>
 </footer>
 

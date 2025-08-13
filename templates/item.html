@@ -5,28 +5,65 @@
     <p class="error">Error: {{ error }}</p>
   {% elif item %}
     <div class="detail-layout">
-      <img class="detail-poster" loading="lazy" src="{{ item.poster or url_for('static', filename='icons/placeholder.png') }}" alt="Poster for {{ item.title }}">
+      <img class="detail-poster" loading="lazy"
+           src="{{ item.poster or url_for('static', filename='icons/placeholder.png') }}"
+           alt="Poster for {{ item.title }}">
+
       <div class="detail-meta">
         <h1>{{ item.title }}{% if item.year %} <span class="muted">({{ item.year }})</span>{% endif %}</h1>
         <p class="muted">{{ item.kind|capitalize }}{% if item.runtime %} · {{ item.runtime }} min{% endif %}</p>
         {% if item.genres %}<p>Genres: {{ item.genres | join(', ') }}</p>{% endif %}
         {% if item.studios %}<p>Studios: {{ item.studios | join(', ') }}</p>{% endif %}
         {% if item.overview %}<p>{{ item.overview }}</p>{% endif %}
+
         <form id="add-to-diary">
           <input type="hidden" name="external_id" value="{{ item.id }}">
           <input type="hidden" name="kind" value="{{ item.kind }}">
           <input type="hidden" name="title" value="{{ item.title }}">
           <input type="hidden" name="poster_url" value="{{ item.poster }}">
+
           <label>Date watched</label>
           <input type="date" name="date_watched">
-          <label>Rating (1–10)</label>
-          <input type="number" name="rating" min="1" max="10" inputmode="numeric">
+
+          <label>Rating</label>
+          <input type="hidden" name="rating" id="ratingInput" value="">
+          <div class="stars" data-max="5" aria-label="Set rating">
+            {% for i in range(1,6) %}
+              <button type="button" class="star" data-value="{{ i }}" aria-label="{{ i }}">★</button>
+            {% endfor %}
+          </div>
+
           <label>Review</label>
           <textarea name="review" rows="4" placeholder="Quick thoughts…"></textarea>
+
           <button type="submit">Add to diary</button>
           <p class="muted small" id="add-result" role="status"></p>
         </form>
       </div>
+
+      {# --- Cast rail (appended) --- #}
+      {% if item.cast %}
+      <aside class="cast-rail" aria-label="Cast">
+        <h4>Cast</h4>
+        <ul>
+          {% for p in item.cast %}
+          <li>
+            <img src="{{ p.photo or url_for('static', filename='icons/placeholder.png') }}" alt="">
+            <div>
+              <div class="name">{{ p.name }}</div>
+              {% if p.character %}<div class="role">{{ p.character }}</div>{% endif %}
+            </div>
+          </li>
+          {% endfor %}
+        </ul>
+      </aside>
+      {% else %}
+      <aside class="cast-rail" aria-label="Cast">
+        <h4>Cast</h4>
+        <div class="muted small">No cast listed.</div>
+      </aside>
+      {% endif %}
+
     </div>
   {% endif %}
 </section>

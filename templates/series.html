@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="series">
+  {% if error %}<p class="error">Error: {{ error }}</p>{% endif %}
+  {% if item %}
+  <div class="series-layout">
+    <div class="poster-wrap">
+      <img class="series-poster" loading="lazy"
+           src="{{ item.poster or url_for('static', filename='icons/placeholder.png') }}"
+           alt="Poster for {{ item.title }}">
+    </div>
+
+    <aside class="cast-rail" aria-label="Cast">
+      <h4>Cast</h4>
+      <ul>
+        {% for p in item.cast %}
+          <li>
+            <img src="{{ p.photo or url_for('static', filename='icons/placeholder.png') }}" alt="" />
+            <div>
+              <div class="name">{{ p.name }}</div>
+              {% if p.character %}<div class="role">{{ p.character }}</div>{% endif %}
+            </div>
+          </li>
+        {% else %}
+          <li class="muted small">No cast listed.</li>
+        {% endfor %}
+      </ul>
+    </aside>
+  </div>
+
+  <div class="card block">
+    <h1>{{ item.title }}{% if item.year %} <span class="muted">({{ item.year }})</span>{% endif %}</h1>
+    {% if item.overview %}<p>{{ item.overview }}</p>{% endif %}
+    {% if item.genres %}<p class="muted small">Genres: {{ item.genres|join(', ') }}</p>{% endif %}
+  </div>
+
+  <div class="card block">
+    <form id="add-to-diary">
+      <input type="hidden" name="external_id" value="{{ item.id }}">
+      <input type="hidden" name="kind" value="series">
+      <input type="hidden" name="title" value="{{ item.title }}">
+      <input type="hidden" name="poster_url" value="{{ item.poster }}">
+      <input type="hidden" name="rating" id="ratingInput" value="">
+
+      <label>Date watched</label>
+      <input type="date" name="date_watched">
+
+      <label>Rating</label>
+      <input type="hidden" name="rating" id="ratingInput" value="">
+      <div class="stars" data-max="5" aria-label="Set rating">
+        {% for i in range(1,6) %}
+          <button type="button" class="star" data-value="{{ i }}" aria-label="{{ i }}">★</button>
+        {% endfor %}
+      </div>
+
+
+      <label>Thoughts</label>
+      <textarea name="review" rows="4" placeholder="Quick thoughts…"></textarea>
+
+      <button type="submit">Add to diary</button>
+      <p class="muted small" id="add-result" role="status"></p>
+    </form>
+  </div>
+  {% endif %}
+</section>
+{% endblock %}

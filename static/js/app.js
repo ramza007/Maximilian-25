@@ -53,3 +53,55 @@ if (userBtn && userMenu) {
     }
   });
 }
+
+// star rating -> hidden input (stores x2)
+// document.querySelectorAll(".stars").forEach((wrap)=>{
+//   const input = document.getElementById("ratingInput");
+//   wrap.querySelectorAll(".star").forEach(btn=>{
+//     btn.addEventListener("click", ()=>{
+//       const val = parseInt(btn.dataset.value, 10); // 1..5
+//       input.value = String(val * 2);               // store 1..10
+//       wrap.querySelectorAll(".star").forEach(b=>{
+//         b.classList.toggle("active", parseInt(b.dataset.value,10) <= val);
+//       });
+//     });
+//   });
+// });
+
+// star rating -> hidden input (stores 1..10)
+document.querySelectorAll(".stars").forEach((wrap)=>{
+  const input = document.getElementById("ratingInput");
+  wrap.querySelectorAll(".star").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      const stars = parseInt(btn.dataset.value, 10); // 1..5
+      input.value = String(stars * 2);               // save 2,4,6,8,10
+      wrap.querySelectorAll(".star").forEach(b=>{
+        b.classList.toggle("active", parseInt(b.dataset.value,10) <= stars);
+      });
+    });
+  });
+});
+
+
+
+
+// focus search with '/'
+document.addEventListener("keydown", (e) => {
+  if (e.key === "/" && !e.metaKey && !e.ctrlKey && !e.altKey &&
+      !e.target.matches("input, textarea")) {
+    e.preventDefault();
+    (document.querySelector(".nav-search input") ||
+     document.querySelector(".bottom-search input"))?.focus();
+  }
+});
+
+// keep values in sync across the two forms
+const topSearch = document.querySelector(".nav-search input");
+const bottomSearch = document.querySelector(".bottom-search input");
+[topSearch, bottomSearch].forEach(el => {
+  if (!el) return;
+  el.addEventListener("input", () => {
+    const other = el === topSearch ? bottomSearch : topSearch;
+    if (other && other.value !== el.value) other.value = el.value;
+  });
+});

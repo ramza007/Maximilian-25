@@ -81,13 +81,16 @@ def item_detail(kind, item_id):
     try:
         if kind == "movie":
             item = tmdb.get_movie(item_id)
+            return render_template("item.html", item=item, kind=kind)
         elif kind == "series":
             item = tmdb.get_series(item_id)
+            return render_template("series.html", item=item, kind=kind)   # <-- new template
         else:
             return "Unknown kind", 400
-        return render_template("item.html", item=item, kind=kind)
     except Exception as e:
-        return render_template("item.html", item=None, kind=kind, error=str(e)), 500
+        tpl = "series.html" if kind == "series" else "item.html"
+        return render_template(tpl, item=None, kind=kind, error=str(e)), 500
+
 
 
 @app.route("/diary")
