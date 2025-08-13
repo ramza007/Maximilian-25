@@ -105,3 +105,44 @@ const bottomSearch = document.querySelector(".bottom-search input");
     if (other && other.value !== el.value) other.value = el.value;
   });
 });
+
+// Make cast panel the same height as the poster (and keep it on resize)
+// (function syncCastHeight(){
+//   const poster = document.querySelector(".detail-poster");
+//   const rail   = document.querySelector(".cast-rail");
+//   if (!poster || !rail) return;
+
+//   function apply(){
+//     const h = poster.getBoundingClientRect().height;
+//     rail.style.setProperty("--poster-equal-h", `${Math.max(220, Math.round(h))}px`);
+//   }
+//   window.addEventListener("load", apply, {once:true});
+//   window.addEventListener("resize", ()=> requestAnimationFrame(apply));
+//   // also recalc after poster image loads
+//   poster.addEventListener("load", apply);
+// })();
+
+// Keep cast rail the same height as the poster, always.
+(function syncCastRailHeight(){
+  const poster = document.querySelector(".detail-poster");
+  const rail   = document.querySelector(".cast-rail");
+  if (!poster || !rail) return;
+
+  function applyHeight(){
+    const h = poster.getBoundingClientRect().height || poster.offsetHeight || 0;
+    if (h > 0) rail.style.setProperty("--poster-equal-h", `${Math.round(h)}px`);
+  }
+
+  // initial + on load
+  applyHeight();
+  if (!poster.complete) poster.addEventListener("load", applyHeight);
+
+  // on resize
+  window.addEventListener("resize", () => requestAnimationFrame(applyHeight));
+
+  // watch for any layout/image changes
+  if ("ResizeObserver" in window) {
+    const ro = new ResizeObserver(() => applyHeight());
+    ro.observe(poster);
+  }
+})();
