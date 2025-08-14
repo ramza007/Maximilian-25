@@ -265,6 +265,11 @@
 h3 a {
   text-decoration: none;
 }
+
+
+
+
+
 /* ---------------------------------------------------------------- VIEWPORTS ---------------------------------------------------------------- */
 * {
   box-sizing: border-box;
@@ -485,8 +490,19 @@ a:hover {
   opacity: 0.9;
 }
 
-@media (min-width: 1000px) {
-  .detail-layout {
-    grid-template-columns: 280px 1fr 260px;
+/* Center poster + cast on large screens, and match the details width */
+@media (min-width: 1000px){
+  .detail-layout{
+    /* two columns: poster + cast */
+    grid-template-columns: 360px 520px;   /* tweak sizes to taste */
+    column-gap: var(--gap);
+    justify-content: center;              /* center the 2-col grid in the container */
+  }
+
+  /* Make the big details card line up with the grid above */
+  .detail .details-block{
+    max-width: calc(360px + 520px + var(--gap));
+    margin-left: auto;
+    margin-right: auto;
   }
 }

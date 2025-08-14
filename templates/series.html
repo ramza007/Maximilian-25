@@ -1,66 +1,73 @@
 {% extends "base.html" %}
 {% block content %}
-<section class="series">
-  {% if error %}<p class="error">Error: {{ error }}</p>{% endif %}
-  {% if item %}
-  <div class="series-layout">
-    <div class="poster-wrap">
-      <img class="series-poster" loading="lazy"
-           src="{{ item.poster or url_for('static', filename='icons/placeholder.png') }}"
-           alt="Poster for {{ item.title }}">
-    </div>
+<section class="detail">
+  {% if error %}
+    <p class="error">Error: {{ error }}</p>
+  {% elif item %}
+    <div class="detail-layout">
 
-    <aside class="cast-rail" aria-label="Cast">
-      <h4>Cast</h4>
-      <ul>
-        {% for p in item.cast %}
-          <li>
-            <img src="{{ p.photo or url_for('static', filename='icons/placeholder.png') }}" alt="" />
-            <div>
+      <!-- Poster (left) -->
+      <div class="poster-wrap">
+        <img class="detail-poster" loading="lazy"
+             src="{{ item.poster or url_for('static', filename='icons/placeholder.png') }}"
+             alt="Poster for {{ item.title }}">
+      </div>
+
+      <!-- Cast rail (right, scrolls; height matches poster) -->
+      <aside class="cast-rail" aria-label="Cast">
+        <h4>Cast</h4>
+        {% if item.cast and item.cast|length %}
+        <ul class="cast-list">
+          {% for p in item.cast %}
+          <li class="cast-card">
+            <img class="cast-photo" loading="lazy"
+                 src="{{ p.photo or url_for('static', filename='icons/placeholder.png') }}" alt="">
+            <div class="cast-text">
               <div class="name">{{ p.name }}</div>
               {% if p.character %}<div class="role">{{ p.character }}</div>{% endif %}
             </div>
           </li>
+          {% endfor %}
+        </ul>
         {% else %}
-          <li class="muted small">No cast listed.</li>
-        {% endfor %}
-      </ul>
-    </aside>
-  </div>
+          <div class="muted small">No cast listed.</div>
+        {% endif %}
+      </aside>
 
-  <div class="card block">
-    <h1>{{ item.title }}{% if item.year %} <span class="muted">({{ item.year }})</span>{% endif %}</h1>
-    {% if item.overview %}<p>{{ item.overview }}</p>{% endif %}
-    {% if item.genres %}<p class="muted small">Genres: {{ item.genres|join(', ') }}</p>{% endif %}
-  </div>
+    </div>
 
-  <div class="card block">
-    <form id="add-to-diary">
-      <input type="hidden" name="external_id" value="{{ item.id }}">
-      <input type="hidden" name="kind" value="series">
-      <input type="hidden" name="title" value="{{ item.title }}">
-      <input type="hidden" name="poster_url" value="{{ item.poster }}">
-      <input type="hidden" name="rating" id="ratingInput" value="">
+    <!-- Details + diary form (full width under the two columns) -->
+    <div class="card block details-block">
+      <h1>{{ item.title }}{% if item.year %} <span class="muted">({{ item.year }})</span>{% endif %}</h1>
+      <p class="muted">{{ item.kind|capitalize }}{% if item.runtime %} · {{ item.runtime }} min{% endif %}</p>
+      {% if item.genres %}<p>Genres: {{ item.genres | join(', ') }}</p>{% endif %}
+      {% if item.studios %}<p>Studios: {{ item.studios | join(', ') }}</p>{% endif %}
+      {% if item.overview %}<p>{{ item.overview }}</p>{% endif %}
 
-      <label>Date watched</label>
-      <input type="date" name="date_watched">
+      <form id="add-to-diary" style="margin-top:12px;">
+        <input type="hidden" name="external_id" value="{{ item.id }}">
+        <input type="hidden" name="kind" value="{{ item.kind }}">
+        <input type="hidden" name="title" value="{{ item.title }}">
+        <input type="hidden" name="poster_url" value="{{ item.poster }}">
 
-      <label>Rating</label>
-      <input type="hidden" name="rating" id="ratingInput" value="">
-      <div class="stars" data-max="5" aria-label="Set rating">
-        {% for i in range(1,6) %}
-          <button type="button" class="star" data-value="{{ i }}" aria-label="{{ i }}">★</button>
-        {% endfor %}
-      </div>
+        <label>Date watched</label>
+        <input type="date" name="date_watched">
 
+        <label>Rating</label>
+        <input type="hidden" name="rating" id="ratingInput" value="">
+        <div class="stars" data-max="5" aria-label="Set rating">
+          {% for i in range(1,6) %}
+            <button type="button" class="star" data-value="{{ i }}" aria-label="{{ i }}">★</button>
+          {% endfor %}
+        </div>
 
-      <label>Thoughts</label>
-      <textarea name="review" rows="4" placeholder="Quick thoughts…"></textarea>
+        <label>Thoughts</label>
+        <textarea name="review" rows="4" placeholder="Quick thoughts…"></textarea>
 
-      <button type="submit">Add to diary</button>
-      <p class="muted small" id="add-result" role="status"></p>
-    </form>
-  </div>
+        <button type="submit">Add to diary</button>
+        <p class="muted small" id="add-result" role="status"></p>
+      </form>
+    </div>
   {% endif %}
 </section>
 {% endblock %}
