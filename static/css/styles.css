@@ -506,3 +506,24 @@ a:hover {
     margin-right: auto;
   }
 }
+
+
+/* Empty/error states */
+.empty{
+  text-align:center;
+}
+.button-like{
+  display:inline-block;
+  padding:10px 14px;
+  border-radius:12px;
+  background:var(--accent);
+  color:#002a24;
+  font-weight:700;
+  text-decoration:none;
+  box-shadow:var(--shadow);
+}
+.button-like:hover{ opacity:.95; }
+
+.error-block{
+  border-left:4px solid #e23;
+}

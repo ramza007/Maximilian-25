@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="container">
+  <div class="card block empty">
+    <h1 style="margin:0 0 6px;">Not found</h1>
+    <p class="muted" style="margin:0 0 16px;">
+      {% if description %}{{ description }}{% else %}
+      The page <code>{{ path }}</code> doesn’t exist.
+      {% endif %}
+    </p>
+
+    <!-- <div style="display:flex; gap:8px; flex-wrap:wrap; margin:12px 0 10px; text-align: center;"> -->
+      <div style="display:flex; justify-content:center; gap:8px; flex-wrap:wrap; margin:12px 0 10px;">
+      <a href="{{ url_for('index') }}" class="button-like">Go home</a>
+      <a href="{{ url_for('diary') }}" class="button-like">Open diary</a>
+    </div>
+
+    <!-- <form class="nav-search" action="{{ url_for('search') }}" method="get" role="search" style="margin-top:8px;">
+      <input type="search" name="q" placeholder="Search movies &amp; series…" autofocus
+             autocapitalize="off" autocomplete="off" spellcheck="false">
+    </form> -->
+  </div>
+</section>
+{% endblock %}

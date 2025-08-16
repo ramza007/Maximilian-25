@@ -1,4 +1,5 @@
-from flask import Flask, render_template, request, jsonify, redirect, url_for
+from flask import Flask, render_template, request, jsonify, redirect, url_for, abort
+from werkzeug.exceptions import abort as wz_abort  # optional alias
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 from itertools import groupby
@@ -53,6 +54,19 @@ class DiaryEntry(db.Model):
             "created_at": self.created_at.isoformat()
         }
 
+# --- Central error pages ---
+@app.errorhandler(404)
+def handle_404(e):
+    # e.description can be set via abort(404, description="...")
+    return render_template("404.html",
+                           path=request.path,
+                           description=getattr(e, "description", None)), 404
+
+@app.errorhandler(500)
+def handle_500(e):
+    return render_template("500.html",
+                           description=getattr(e, "description", None)), 500
+
 # --- TMDb Client ---
 tmdb = TMDBClient(
     bearer=os.environ.get("TMDB_BEARER"),
@@ -81,16 +95,17 @@ def item_detail(kind, item_id):
     try:
         if kind == "movie":
             item = tmdb.get_movie(item_id)
-            return render_template("item.html", item=item, kind=kind)
-        elif kind == "series":
-            item = tmdb.get_series(item_id)
-            return render_template("series.html", item=item, kind=kind)   # <-- new template
         else:
-            return "Unknown kind", 400
-    except Exception as e:
-        tpl = "series.html" if kind == "series" else "item.html"
-        return render_template(tpl, item=None, kind=kind, error=str(e)), 500
-
+            item = tmdb.get_series(item_id)
+        return render_template("item.html", item=item)
+    except requests.HTTPError as ex:
+        status = getattr(getattr(ex, "response", None), "status_code", None)
+        if status == 404:
+            abort(404, description="We couldn’t find that title on TMDb.")
+        # Anything else: treat as server error
+        app.logger.exception("TMDb error on %s %s", kind, item_id)
+        return render_template("500.html",
+                               description="Upstream API error. Please try again."), 500
 
 
 @app.route("/diary")
