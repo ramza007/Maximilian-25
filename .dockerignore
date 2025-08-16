@@ -1,0 +1,23 @@
+# Python crap
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.pytest_cache/
+*.coverage
+.coverage*
+
+# venvs
+.venv/
+.venv*/
+env/
+venv/
+
+# local db / uploads (we'll mount ./instance at runtime)
+instance/
+
+# git & editor
+.git
+.gitignore
+*.swp
+*.DS_Store

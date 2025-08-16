@@ -1,0 +1,20 @@
+version: "3.9"
+
+services:
+  web:
+    build: .
+    image: maximilian:latest
+    ports:
+      - "8000:8000"
+    environment:
+      FLASK_ENV: production
+      SECRET_KEY: ${SECRET_KEY}
+      # Use one of these for TMDB auth (your app supports either)
+      TMDB_API_KEY: ${TMDB_API_KEY}
+      TMDB_BEARER: ${TMDB_BEARER}
+      # Persist DB in /app/instance inside the container
+      DATABASE_URL: ${DATABASE_URL:-sqlite:////app/instance/maximilian.db}
+    volumes:
+      # Persist the SQLite DB and any uploads
+      - ./instance:/app/instance
+    restart: unless-stopped
