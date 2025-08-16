@@ -1,7 +1,7 @@
 name: build-and-publish
 on:
   push:
-    branches: [ main ]   # push on main merges
+    branches: [ docker-deploy ]   # push on main merges
   # optional: publish versioned tags when you make a release
   release:
     types: [published]
