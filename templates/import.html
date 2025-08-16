@@ -1,17 +1,56 @@
 {% extends "base.html" %}
 {% block content %}
-<section>
-  <h2>Import Letterboxd CSV</h2>
-  <p class="muted small">Upload the CSV you export from Letterboxd. We'll map: <code>Date | Name | Year | Letterboxd URI | Rating | Rewatch | Tags | Watched Date</code>. Duplicates are okay.</p>
-  {% if error %}<p class="error">{{ error }}</p>{% endif %}
-  {% if added is defined %}
-    <p>Imported <strong>{{ added }}</strong> rows{% if errors %} ({{ errors }} errors skipped){% endif %}.</p>
-    <p><a href="{{ url_for('diary') }}">Go to your diary →</a></p>
-  {% endif %}
-  <form class="card" action="{{ url_for('import_letterboxd') }}" method="post" enctype="multipart/form-data" style="padding:12px;">
-    <label for="file">Letterboxd CSV file</label>
-    <input id="file" type="file" name="file" accept=".csv">
-    <button type="submit" style="margin-top:10px;">Import</button>
-  </form>
+<section class="container">
+  <div class="card block">
+    <h1>Import from Letterboxd</h1>
+
+    {% if error %}
+      <p class="error">{{ error }}</p>
+    {% endif %}
+
+    {% if added is defined %}
+      <p class="muted" style="margin-bottom:8px;">
+        Imported <strong>{{ added }}</strong> entr{{ 'ies' if added != 1 else 'y' }}{% if errors %}, {{ errors }} error{{ 's' if errors != 1 else '' }}{% endif %}.
+      </p>
+      <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px;">
+        <a class="button-like" href="{{ url_for('diary') }}">View diary</a>
+      </div>
+      <hr style="border:0;border-top:1px solid #22303d;margin:8px 0 12px;">
+    {% endif %}
+
+    <form id="import-form" method="post" enctype="multipart/form-data">
+      <label>CSV file</label>
+      <input type="file" name="file" accept=".csv" required>
+      <button type="submit">Import CSV</button>
+      <p class="muted small">Upload your Letterboxd export CSV (we’ll add duplicates if present).</p>
+    </form>
+  </div>
 </section>
+
+<!-- Loading overlay -->
+<div id="loading" class="loading hidden" aria-live="polite" aria-busy="true">
+  <div class="loading-card">
+    <div class="spinner" aria-hidden="true"></div>
+    <div>
+      <div style="font-weight:700;margin-bottom:2px;">Importing…</div>
+      <div class="muted small">This can take a minute. Don’t close the tab.</div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Show overlay and disable submit while server processes the CSV
+  (function () {
+    const form = document.getElementById('import-form');
+    const overlay = document.getElementById('loading');
+    if (!form || !overlay) return;
+
+    form.addEventListener('submit', () => {
+      overlay.classList.remove('hidden');
+      const btn = form.querySelector('button[type="submit"]');
+      if (btn) { btn.disabled = true; btn.textContent = 'Importing…'; }
+      // let the normal form POST proceed (full page reload)
+    });
+  })();
+</script>
 {% endblock %}
