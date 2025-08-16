@@ -1,5 +1,5 @@
 # Maximilian (Flask + TMDb)
-Mobile-first Letterboxd-style diary with bottom search, TMDb data, and Letterboxd CSV import.
+Mobile-first diary, uses TMDb data, and Letterboxd CSV import.
 
 ## Quickstart
 ```bash
