@@ -1,21 +1,25 @@
-# .github/workflows/docker.yml
 name: build-and-publish (docker-deploy)
 
 on:
   push:
-    branches: [ docker-deploy ]   # <— your branch
+    branches: [ docker-deploy ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      packages: write            # <— required for GHCR push
+      packages: write
+
     steps:
       - uses: actions/checkout@v4
-
       - uses: docker/setup-qemu-action@v3
       - uses: docker/setup-buildx-action@v3
+
+      # Create a lowercased image name: ghcr.io/<owner>/<repo>
+      - name: Prepare image name
+        id: prep
+        run: echo "image=ghcr.io/${GITHUB_REPOSITORY@L}" >> "$GITHUB_OUTPUT"
 
       - name: Login to GHCR
         uses: docker/login-action@v3
@@ -24,14 +28,14 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push (multi-arch)
+      - name: Build and push
         uses: docker/build-push-action@v5
         with:
           context: .
           platforms: linux/amd64,linux/arm64
           push: true
           tags: |
-            ghcr.io/${{ github.repository }}:docker-deploy
-            ghcr.io/${{ github.repository }}:${{ github.sha }}
+            ${{ steps.prep.outputs.image }}:docker-deploy
+            ${{ steps.prep.outputs.image }}:${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
