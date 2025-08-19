@@ -11,7 +11,12 @@ import os
 
 from tmdb import TMDBClient
 
+
 app = Flask(__name__)
+
+db_uri = os.getenv("DATABASE_URL", "sqlite:///instance/maximilian.db")
+app.config["SQLALCHEMY_DATABASE_URI"] = db_uri
+
 
 # --- Config ---
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
