@@ -527,3 +527,27 @@ a:hover {
 .error-block{
   border-left:4px solid #e23;
 }
+
+/* Loading overlay for import */
+.hidden{ display:none !important; }
+
+.loading{
+  position:fixed; inset:0; z-index:3000;
+  display:flex; align-items:center; justify-content:center;
+  backdrop-filter: blur(6px);
+  background: rgba(14,20,27,.55);
+}
+.loading-card{
+  display:flex; align-items:center; gap:12px;
+  background: var(--bg-elev);
+  border:1px solid #22303d;
+  border-radius: var(--radius);
+  padding: 18px 20px;
+  box-shadow: var(--shadow);
+}
+.spinner{
+  width:28px; height:28px; border-radius:50%;
+  border:3px solid #22303d; border-top-color: var(--accent);
+  animation: spin 0.9s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }

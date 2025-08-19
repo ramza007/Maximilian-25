@@ -20,7 +20,16 @@ app.config["SQLALCHEMY_DATABASE_URI"] = db_uri
 
 # --- Config ---
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
-app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL", f"sqlite:///{os.path.join(BASE_DIR, 'maximilian.db')}")
+
+DEFAULT_SQLITE = "sqlite:////app/instance/maximilian.db"
+
+db_uri = os.getenv("DATABASE_URL", DEFAULT_SQLITE)
+
+# Normalize heroku-style URLs
+if db_uri.startswith("postgres://"):
+    db_uri = db_uri.replace("postgres://", "postgresql+psycopg://", 1)
+
+app.config["SQLALCHEMY_DATABASE_URI"] = db_uri
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "dev-secret-change-me")
 
